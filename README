@@ -1,0 +1,117 @@
+ERNE - Extended Randomized Numerical alignEr
+
+http://erne.sourceforge.net
+
+
+****** Installation ******
+
+Briefly, the shell commands `./configure; make; make install' should configure, build, and install this package (`make install' must be execute by root if you don't changed `--prefix' options in `./configure').
+
+The LIBBOOST > 1.40 are required. If MPI support is available, the MPI versions erne-dmap will built adding `--enable-mpi` to `./configure`.
+
+ERNE will be compiled without debugging informations and with the highest level of optimization by default. If you want to debug the code (e.g., the maintainer asks you to do something like this), add `--enable-maintainer-mode' to create `-gdb' versions of the programs. 
+
+****** Reference preparation (DNA-seq and RNA-seq) ******
+
+In order to align a set of reads against a reference genome we have to build the ERNE index. In order to build the Hash table for the multi-fasta file ref.fasta we have to type the following command:
+
+erne-create --reference ref.eht --fasta ref.fasta
+
+This command will produce the file ref.eht that will be used later in order to align reads. 
+
+
+****** Alignment (DNA-seq and RNA-seq) *****
+
+ERNE can be used to search for alignments only after having prepared the reference file. A typical use of erne-map, for a single read lane, is:
+
+erne-map --reference ref.eht --query1 s_1_sequence.txt --auto-errors --output out.sam
+
+which aligns the file s_1_sequence.txt against the reference ref.erne. In this case, the
+read will be trimmed out before being aligned and the number of maximum errors is
+chosen in relation to the length of the read after the trimming (default value:
+1 error every 15bp). Maximum read length allowed is 300bp.
+
+For a paired end read lane, the command could be:
+
+erne-map --reference ref.erne --query1 s_1_1_sequence.txt --query2 s_1_2_sequence.txt --output out.sam
+
+If the query files are compressed (in .gz or .bz2 format), the program will decompress the files on the
+fly. If you want to produce as output a bam file, just
+add the --bam parameter (remember to write "--output out.bam").
+
+erne-map automatically detects if the inputs are in ILLUMINA or in STANDARD fastq format.
+If you want to override the default behaviour, use --force-illumina or
+--force-standard parameters, respectively.
+
+If you use erne-map on a multiprocessor machine with N processors, you can define the
+number of thread to use with --threads <N>.
+
+If you want to change the default error ratio you can use --errors-rate <N>,
+where N is the number of bp for each error (default 15). If you want to fix the
+maximum number of errors allowed for each read, you can use the --errors E instead of
+--auto-errors.
+
+If you do not want to perform the trimming operation, just add the --no-auto-trim
+parameter.
+
+In PE  alignments the BAM "proper pair" flag is set to true if the two reads are in the same contig and they are facing (---> <---). If you specify the two parameters "--insert-size-min MIN" and "--insert-size-max MAX", the proper pair is set to true if the above condition AND if the insert size is between MIN and MAX. 
+
+If you provide a (small) reference sequence (preprocessed) with
+--contamination-reference parameters, the read will be first aligned against this reference,
+before being aligned against the main reference. If a hit in the contamination sequence is found, the read
+is marked as not found and the tag XC is set to remember that the read belongs to the contamination sequence and not to the reference.
+
+If you want to allow small indels add the --indels options. You can change the maximum number of bp allowed with --indels-max <N> parameter (default: 5). More bp are allowed, more slower the process becomes.
+ 
+With the option --print-all (available in this moment only for single reads), all the alignments will be printed in the SAM file. If you want to have a maximum number or record, use --print-first option. 
+
+
+****** Reference preparation (BS-seq) ******
+
+In order to align a set of BS-reads against a reference genome we have to build the ERNE index. In order to build the Hash table for the multi-fasta file ref.fasta we have to type the following command:
+
+erne-create --methyl-hash --reference ref.eht --fasta ref.fasta
+
+This command will produce the file ref.eht that will be used later in order to align reads. 
+
+
+****** Alignment (BS-seq) *****
+
+The use of erne-map with BS-seq is the same of DNA-seq and RNA-seq, but the algorithm require a correct hash table. If the hash table was produced with --methyl-hash options, the program known to use the appropriate algorithm. 
+
+
+ ****** Read Filtering *****
+Often once needs to obtain a set of filtered and trimmed reads. This is a mandatory step when once want to perform de-novo assembly.
+erne-filter is designed in order to solve this problem. A tipical use of erne-filter with this option is:
+
+erne-filter --reference contamination.erne --query1  s_1_1_sequence.txt --query2 s_1_2_sequence.txt --output trimmed_1
+
+erne-filter will align all the reads against the contamination reference, it will trim reads according to their quality and save the results into
+trimmed_1_1.fastq
+trimmed_1_2.fastq
+trimmed_1_unpaired.fastq
+
+If you use erne-filter on a multiprocessor machine with N processors, you can define the number of thread to use with --threads <N>. --reference parameters is optional after release 0.9.10.
+
+
+ ****** Using on cluster *****
+If the MPI support is detected, the erne-dcreate and erne-dmap program are built.
+In order to successfully use erne-d*, the user must know the cluster composition (number of available nodes, number of cores per node).
+We will provide some examples to how use erne-d* over an OpenMPI system composed by 10 nodes (n=10) with 8 cores each (p=8).
+First of all, a file named `hostfile` containing the names of the 10 nodes that we are going to use must be provided.
+
+erne-dmap uses a slightly different reference structure than the one used by erne-map. In particular, a set of n `.eht' files with an additional header files
+are generated. In order to do this on our system we have to provide the following command:
+
+mpirun -pernode -hostfile hostfile erne-create --reference PREFIX-NAME --fasta /path/of/input.fasta
+
+After the computation ends, we are ready to align the reads:
+
+mpirun -pernode -hostfile hostfile erne-map --reference PREFIX-NAME --threads 8 --query1 /path/of/reads.txt [other options]
+
+In some queue environments (like Torque or similar) you do not need to provide the hostfile. If you do not want to use multi-threading you can remove both -pernode and --threads options.  
+
+erne-dmap accept exactly the same arguments of erne-map except --query2, --indels, and --gap: the code is still experimental and at this moment only single read search with some limitations works.
+We are working on PE alignment. 
+
+
