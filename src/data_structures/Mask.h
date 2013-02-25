@@ -109,6 +109,7 @@ public:
 
 	void extract_fasta_masked(Fasta & output) const;
 	void set_fasta_masked(Fasta & output) const;
+	void set_original_fasta(Fasta & output) const;
 
 	void low_quality_discard() { low_quality = true; discarded = true; }
 

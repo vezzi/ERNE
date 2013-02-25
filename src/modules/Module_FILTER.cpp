@@ -119,6 +119,8 @@ int Module_FILTER::read_sequences_conditional(Auto_Unzip * first, Auto_Unzip * s
 
 /* static */
 void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads_rv, const Options * options) {
+
+
 	Mask * sequences = new Mask[SEQUENCES_FOR_BLOCK_FILTERING];
 	int read_seq=0;
 	while((read_seq = read_sequences_conditional(reads_fw, reads_rv, SEQUENCES_FOR_BLOCK_FILTERING, sequences, fastq_input_format,options->gui_output, (options->query2.size() > 0))) > 0) {
@@ -160,17 +162,67 @@ void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads
 			{
 				mutex::scoped_lock lock(ffa_write_mutex);
 
-				for(int i=0; i < read_seq; i+=2){
-					Mask & masked_fw = sequences[i];
-					Mask & masked_rv = sequences[i+1];
-					if( !(masked_fw.discarded || masked_rv.discarded || masked_fw.low_quality || masked_rv.low_quality)) {
+				if (options->trim  ) {
+					for(int i=0; i < read_seq; i+=2){
+						Mask & masked_fw = sequences[i];
+						Mask & masked_rv = sequences[i+1];
+						if( !(masked_fw.discarded || masked_rv.discarded || masked_fw.low_quality || masked_rv.low_quality)) {
+							if(masked_fw.algn == 0 && masked_rv.algn == 0 ) {
+								Fasta read_fw;
+								masked_fw.set_fasta_masked(read_fw);
+								read_fw.set_FASTQ_type(fastq_output_format);
+								outputFileFW << read_fw;
+								Fasta read_rv;
+								masked_rv.set_fasta_masked(read_rv);
+								read_rv.set_FASTQ_type(fastq_output_format);
+								outputFileRV << read_rv;
+								FilteredReads+=2;
+								totalReadLength += (read_fw.get_sequence().length() + read_rv.get_sequence().length());
+							} else {
+								ContaminatedReads+=2;
+							}
+						} else if  (!(masked_fw.discarded ||  masked_fw.low_quality) ) {
+							if(masked_fw.algn == 0) {
+								Fasta read_fw;
+								masked_fw.set_fasta_masked(read_fw);
+								read_fw.set_FASTQ_type(fastq_output_format);
+								outputFileUNPAIR << read_fw;
+								FilteredReads++;
+								totalReadLength += (read_fw.get_sequence().length());
+							} else {
+								ContaminatedReads++;
+							}
+							LowQualityReads++;
+						} else if  (!(masked_rv.discarded ||  masked_rv.low_quality) ) {
+							if(masked_rv.algn == 0) {
+								Fasta read_rv;
+								masked_rv.set_fasta_masked(read_rv);
+								read_rv.set_FASTQ_type(fastq_output_format);
+								outputFileUNPAIR << read_rv;
+								FilteredReads++;
+								totalReadLength += (read_rv.get_sequence().length());
+							} else {
+								ContaminatedReads++;
+							}
+							LowQualityReads++;
+						} else {
+							LowQualityReads+=2;
+						}
+					}
+
+					totalReadNum +=read_seq;
+				} else {
+					for(int i=0; i < read_seq; i+=2){
+						Mask & masked_fw = sequences[i];
+						Mask & masked_rv = sequences[i+1];
 						if(masked_fw.algn == 0 && masked_rv.algn == 0 ) {
 							Fasta read_fw;
-							masked_fw.set_fasta_masked(read_fw);
+							masked_fw.set_original_fasta(read_fw);
 							read_fw.set_FASTQ_type(fastq_output_format);
 							outputFileFW << read_fw;
+
 							Fasta read_rv;
-							masked_rv.set_fasta_masked(read_rv);
+							masked_rv.set_original_fasta(read_rv);
 							read_rv.set_FASTQ_type(fastq_output_format);
 							outputFileRV << read_rv;
 							FilteredReads+=2;
@@ -178,37 +230,10 @@ void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads
 						} else {
 							ContaminatedReads+=2;
 						}
-					} else if  (!(masked_fw.discarded ||  masked_fw.low_quality) ) {
-						if(masked_fw.algn == 0) {
-							Fasta read_fw;
-							masked_fw.set_fasta_masked(read_fw);
-							read_fw.set_FASTQ_type(fastq_output_format);
-							outputFileUNPAIR << read_fw;
-							FilteredReads++;
-							totalReadLength += (read_fw.get_sequence().length());
-						} else {
-							ContaminatedReads++;
-						}
-						LowQualityReads++;
-					} else if  (!(masked_rv.discarded ||  masked_rv.low_quality) ) {
-						if(masked_rv.algn == 0) {
-							Fasta read_rv;
-							masked_rv.set_fasta_masked(read_rv);
-							read_rv.set_FASTQ_type(fastq_output_format);
-							outputFileUNPAIR << read_rv;
-							FilteredReads++;
-							totalReadLength += (read_rv.get_sequence().length());
-						} else {
-							ContaminatedReads++;
-						}
-						LowQualityReads++;
-					} else {
-						LowQualityReads+=2;
+						totalReadNum +=read_seq;
 					}
 				}
-
-				totalReadNum +=read_seq;
-		}
+			}
 		} else {
 			for(int i = 0 ; i < read_seq; i++) {
 				Mask & masked_fw = sequences[i];

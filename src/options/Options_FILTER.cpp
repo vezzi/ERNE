@@ -48,7 +48,7 @@ bool Options_FILTER::process(int argc, char *argv[]) {
 		("auto-errors","use automatically one error every ~15bp")
 		("errors-rate",po::value<t_errors>(),"set error rate (default 15)")
 		("errors", po::value<t_errors>(), "fixed number of errors allowed (>= 0, default 0)")
-		("no-auto-trim","disable automatic trimming")
+		("no-auto-trim","disable automatic trimming (read are trimmed and aligned but only original reads are returned)")
 		("min-phred-value-mott",po::value<Mask::t_min_phred_value_MOTT>(),"minimum value used by Mott-like trimming (default 20)")
 		("min-mean-phred-quality",po::value<Mask::t_min_phred_value_MOTT>(),"minimum mean value to accept a (trimmed) sequence (default 20)")
 		("min-size", po::value<t_pattern_length>(), "minimum sequence length after trimming (default 25)")

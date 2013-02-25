@@ -323,6 +323,13 @@ void Mask::set_fasta_masked(Fasta & output) const {
 	output.set_quality(get_good_quality().c_str());
 }
 
+void Mask::set_original_fasta(Fasta & output) const {
+	output.set_id(get_id().c_str());
+	output.set_sequence(sequence.c_str());
+	output.set_quality(quality.c_str());
+}
+
+
 string Mask::print_information() const {
 	stringstream ss;
 	if (masked)
