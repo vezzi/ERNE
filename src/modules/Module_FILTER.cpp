@@ -152,7 +152,7 @@ void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads
 					masked_fw.algn = solution_fw.size(); // memorize number of solutions, does not matter if more than one occurence has been found
 				} else if(! options->trim) { // if --no-auto-trim active force alignment of low quality reads
 					Items solution_fw;
-					H.search(masked_fw.get_original_sequence(), solution_fw, 5);
+					H.search(masked_fw.get_sequence(), solution_fw, 5);
 					masked_fw.algn = solution_fw.size(); // memorize number of solutions, does not matter if more than one occurence has been found
 				}
 				if (has_reference and not(masked_rv.discarded or  masked_rv.low_quality)) {
@@ -162,7 +162,7 @@ void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads
 					masked_rv.algn = solution_rv.size();
 				} else if(! options->trim) { // if --no-auto-trim active force alignment of low quality reads
 					Items solution_rv;
-					H.search(masked_rv.get_original_sequence(), solution_rv, 5);
+					H.search(masked_rv.get_sequence(), solution_rv, 5);
 					masked_rv.algn = solution_rv.size();
 				}
 			}

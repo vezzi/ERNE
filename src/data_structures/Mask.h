@@ -88,6 +88,7 @@ public:
 	friend ostream& operator<<(ostream& channel, const Mask& mask);
 	string to_string() const;
 	string get_good_sequence() const;
+	string get_sequence() const;
 	INLINE const string & get_original_sequence() const { return sequence ; }
 	string get_masked() const;
 	INLINE const string & get_original_quality() const { return quality; }

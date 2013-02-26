@@ -96,6 +96,11 @@ string Mask::get_good_sequence() const {
 		return sequence;
 }
 
+
+string Mask::get_sequence() const {
+	return sequence;
+}
+
 string Mask::get_good_quality() const {
 	if (discarded)
 		return string();
