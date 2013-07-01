@@ -34,7 +34,7 @@ using namespace fasta;
 #include "common.h"
 using namespace std;
 
-#define MAX_READ_LENGTH 300
+#define MAX_READ_LENGTH 500
 
 class Mask {
 public:
