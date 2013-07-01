@@ -46,8 +46,7 @@ bool Options_FILTER::process(int argc, char *argv[]) {
 		("force-standard","force standard SANGER FASTQ format (default: auto-detect)")
 		("threads", po::value<unsigned int>(), "maximum number of allowed threads (default 1)")
 		("auto-errors","use automatically one error every ~15bp")
-		("errors-rate",po::value<t_errors>(),"set error rate (default 15)")
-		("errors", po::value<t_errors>(), "fixed number of errors allowed (>= 0, default 0)")
+		("errors", po::value<t_errors>(), "fixed number of errors allowed (>= 0, default 0) --- overwrites auto-errors ")
 		("no-auto-trim","disable automatic trimming (read are trimmed and aligned but only original reads are returned)")
 		("min-phred-value-mott",po::value<Mask::t_min_phred_value_MOTT>(),"minimum value used by Mott-like trimming (default 20)")
 		("min-mean-phred-quality",po::value<Mask::t_min_phred_value_MOTT>(),"minimum mean value to accept a (trimmed) sequence (default 20)")
@@ -122,6 +121,13 @@ bool Options_FILTER::process(int argc, char *argv[]) {
 
 	if (vm.count("threads"))
 		threads_number = vm["threads"].as<unsigned int>();
+
+	auto_errors = true; // default
+
+	if (vm.count("errors")) {
+		common_errors_allowed = vm["errors"].as<t_errors>();
+		auto_errors = false;
+	}
 
 	return true;
 }

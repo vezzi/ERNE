@@ -27,7 +27,7 @@
 
 mutex ffa_write_mutex;
 Hash H;
-bool auto_errors;
+
 
 unsigned long int totalReadNum;
 unsigned long int LowQualityReads;
@@ -53,8 +53,6 @@ void Module_FILTER::execute(const Options & options) {
 		H.load(options.reference_file.c_str());
 
 	string output = options.output_file;
-
-	auto_errors = true;
 
 	string fw_out = output+"_1.fastq";
 	outputFileFW.open(fw_out.c_str());
@@ -135,12 +133,12 @@ void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads
 				masked_fw.quality_trimming_MOTT(options->min_phred_value_MOTT,options->min_mean_quality,options->min_size);
 				masked_rv.quality_trimming_MOTT(options->min_phred_value_MOTT,options->min_mean_quality,options->min_size);
 
-				if (auto_errors)
+				if (options->auto_errors)
 					calculated_errors_first = round((double)masked_fw.get_good_length() / options->errors_rate);
 				else
 					calculated_errors_first = options->common_errors_allowed;
 
-				if (auto_errors)
+				if (options->auto_errors)
 					calculated_errors_second = round((double)masked_rv.get_good_length() / options->errors_rate);
 				else
 					calculated_errors_second = options->common_errors_allowed;
@@ -248,7 +246,7 @@ void Module_FILTER::filter_reads(int id, Auto_Unzip *reads_fw, Auto_Unzip *reads
 
 				masked_fw.quality_trimming_MOTT(options->min_phred_value_MOTT,options->min_mean_quality,options->min_size);
 
-				if (auto_errors)
+				if (options->auto_errors)
 					calculated_errors_first = round((double)masked_fw.get_good_length() / options->errors_rate);
 				else
 					calculated_errors_first = options->common_errors_allowed;
